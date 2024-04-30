@@ -48,12 +48,14 @@ ifeq ($(TARGET_N64),0)
   GRUCODE := f3dex2e
   TARGET_WINDOWS := 0
   ifeq ($(TARGET_WEB),0)
-    ifeq ($(TARGET_DOS),0)
-      ifeq ($(OS),Windows_NT)
-        TARGET_WINDOWS := 1
-      else
-        # TODO: Detect Mac OS X, BSD, etc. For now, assume Linux
-        TARGET_LINUX := 1
+    ifeq ($(TARGET_EFI),0)
+      ifeq ($(TARGET_DOS),0)
+        ifeq ($(OS),Windows_NT)
+          TARGET_WINDOWS := 1
+        else
+          # TODO: Detect Mac OS X, BSD, etc. For now, assume Linux
+          TARGET_LINUX := 1
+        endif
       endif
     endif
   endif
