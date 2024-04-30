@@ -22,7 +22,9 @@ TARGET_N64 ?= 0
 # Build for Emscripten/WebGL
 TARGET_WEB ?= 0
 # Build for DOS
-TARGET_DOS ?= 1
+TARGET_DOS ?= 0
+# Build for EFI
+TARGET_EFI ?= 1
 # Compiler to use (ido or gcc)
 COMPILER ?= ido
 
@@ -35,7 +37,7 @@ ENABLE_OPENGL ?= 0
 # Legacy OGL
 ENABLE_OPENGL_LEGACY ?= 0
 # Software rasterizer
-ENABLE_SOFTRAST ?= 0
+ENABLE_SOFTRAST ?= 1
 # Pick GL backend for DOS: osmesa, dmesa
 DOS_GL := osmesa
 
@@ -231,7 +233,11 @@ else
   ifeq ($(TARGET_DOS),1)
     BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_dos
   else
-    BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_pc
+    ifeq ($(TARGET_EFI),1)
+      BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_efi
+    else
+      BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_pc
+    endif
   endif
 endif
 endif
@@ -246,7 +252,11 @@ else
     ifeq ($(TARGET_DOS),1)
       EXE := $(BUILD_DIR)/$(TARGET).exe
     else
-      EXE := $(BUILD_DIR)/$(TARGET)
+      ifeq ($(TARGET_EFI),1)
+        EXE := $(BUILD_DIR)/$(TARGET).efi
+      else
+        EXE := $(BUILD_DIR)/$(TARGET)
+      endif
     endif
   endif
 endif
@@ -496,6 +506,10 @@ ifeq ($(TARGET_DOS),1)
   LD := $(CXX)
 endif
 
+ifeq ($(TARGET_EFI),1)
+  include uefi/Makefile
+endif
+
 PYTHON := python3
 
 # Platform-specific compiler and linker flags
@@ -514,6 +528,14 @@ endif
 ifeq ($(TARGET_DOS),1)
   PLATFORM_CFLAGS  := -DTARGET_DOS -std=gnu99 -nostdlib -m32 -march=i586 -mtune=pentium-mmx -mmmx -ffreestanding -fgnu89-inline
   PLATFORM_LDFLAGS := -lm -no-pie -Llib/allegro -lalleg
+endif
+ifeq ($(TARGET_EFI),1)
+  PLATFORM_CFLAGS  := -DTARGET_EFI -std=gnu99 -nostdlib -mtune=core2 \
+                      -msse2 -fshort-wchar -fno-strict-aliasing -ffreestanding \
+                      -fno-stack-protector -fno-stack-check -fgnu89-inline \
+                      -I $(CURDIR)/uefi -I/usr/include -I/usr/include/efi \
+                      -I/usr/include/efi/protocol -I/usr/include/efi/$(ARCH) \
+                      -D__$(ARCH)__
 endif
 
 PLATFORM_CFLAGS += -DNO_SEGMENTED_MEMORY -Wfatal-errors
@@ -582,7 +604,9 @@ endif
 GFX_CFLAGS += -DWIDESCREEN
 
 ifeq ($(TARGET_DOS),0)
-  MARCH := -march=native
+  ifeq ($(TARGET_EFI),0)
+    MARCH := -march=native
+  endif
 endif
 
 CC_CHECK := $(CC) -fsyntax-only -fsigned-char $(INCLUDE_CFLAGS) -Wall -Wextra -Wno-format-security -D_LANGUAGE_C $(VERSION_CFLAGS) $(MATCH_CFLAGS) $(PLATFORM_CFLAGS) $(GFX_CFLAGS) $(GRUCODE_CFLAGS)
