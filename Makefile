@@ -255,7 +255,8 @@ else
       EXE := $(BUILD_DIR)/$(TARGET).exe
     else
       ifeq ($(TARGET_EFI),1)
-        EXE := $(BUILD_DIR)/$(TARGET).efi
+        EXE := $(BUILD_DIR)/$(TARGET).so
+        EFI_EXE := $(BUILD_DIR)/$(TARGET).efi
       else
         EXE := $(BUILD_DIR)/$(TARGET)
       endif
@@ -509,7 +510,7 @@ ifeq ($(TARGET_DOS),1)
 endif
 
 ifeq ($(TARGET_EFI),1)
-  include uefi/Makefile
+  EFIARCH ?= $(shell uname -m | sed s,i[3456789]86,ia32, | sed s,amd,x86_,)
 endif
 
 PYTHON := python3
@@ -658,7 +659,11 @@ ifeq ($(COMPARE),1)
 	@$(SHA1SUM) -c $(TARGET).sha1 || (echo 'The build succeeded, but did not match the official ROM. This is expected if you are making changes to the game.\nTo silence this message, use "make COMPARE=0"'. && false)
 endif
 else
+ifeq ($(TARGET_EFI),1)
+all: $(EXE) $(EFI_EXE)
+else
 all: $(EXE)
+endif
 endif
 
 clean:
@@ -941,6 +946,16 @@ $(ROM): $(ELF)
 
 $(BUILD_DIR)/$(TARGET).objdump: $(ELF)
 	$(OBJDUMP) -D $< > $@
+
+else ifeq ($(TARGET_EFI),1)
+uefi/%:
+	$(MAKE) -Cuefi ARCH=$(EFIARCH) USE_GCC=1 $@
+
+$(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) uefi/crt_$(EFIARCH).o uefi/libuefi.a
+	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
+
+$(EFI_EXE): $(EXE)
+	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym  -j .rel -j .rela -j .rel.* -j .rela.* -j .reloc --target $(EFIARCH) --subsystem=10 $^ $(addprefix $(BUILD_DIR),$@) || echo target: $(EFIARCH)
 
 else
 $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES)
