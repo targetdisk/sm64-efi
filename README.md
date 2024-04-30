@@ -1,26 +1,8 @@
-# Super Mario 64 DOS Port
+# Super Mario 64 EFI Port
 
-This is a novelty port of the sm64-port to DOS. Do not expect it to be playable.
+This is a novelty port of the sm64-port to EFI. Do not expect it to be playable.
 
-![Goddard](https://raw.githubusercontent.com/fgsfdsfgs/sm64-port/dos/media/screenshot_00.png)
-
-![In-game](https://raw.githubusercontent.com/fgsfdsfgs/sm64-port/dos/media/screenshot_01.png)
-
-![3Dfx in-game](https://raw.githubusercontent.com/fgsfdsfgs/sm64-port/dos/media/screenshot_02.png)
-
-## Building Instructions
-
-### Docker
-
-1. Install Docker
-2. Build image: `docker build . -t sm64_dos`
-3. Run build: `docker run --rm --mount type=bind,source="$(pwd)",destination=/sm64 -ti sm64_dos make -j4 ENABLE_OPENGL_LEGACY=1`
-
-### Other
-
-Consult the [Dockerfile](./Dockerfile) for required libraries and steps.
-
-### Notes:
+## Notes:
 
 For *best* performance:
  - Use `ENABLE_OPENGL_LEGACY=1` to enable the legacy OpenGL renderer
@@ -39,24 +21,6 @@ In 3DFX mode the list of supported resolutions depends on the card, 640x480 is a
 
 Use `ENABLE_SOFTRAST=1` to enable the experimental custom software renderer. It can be faster than `DOS_GL=osmesa` in some cases, but might be much more buggy.
 
-### 3Dfx mode:
-
-When `DOS_GL` is set to `dmesa`, the game will render using FXMesa, which uses 3Dfx Glide for rendering.
-That means you will need a 3Dfx card (Voodoo II and above recommended, but will run on a Voodoo I probably) and appropriate
-drivers to run it.
-
-The drivers can be obtained from this repository (see [this file](lib/glide3/drivers/README.md)). Put the appropriate
-`glide3x.dxe` file next to the EXE.
-
-When running Windows 9x, you will have to reboot into DOS mode before running the game for this to work.
-
-dosbox-x and PCem can emulate Voodoo cards for testing purposes.
-
-## Running
-
-1. You'll need a copy of [CWSDPMI.EXE](https://sandmann.dotster.com/cwsdpmi/) alongside the executable.
-2. Either `cp build/us_dos/sm64.us.f3dex2e.exe .` or symlink `ln -s build/us_dos/sm64.us.f3dex2e.exe sm64.exe`
-3. Run with `dosbox sm64.exe` or try on some real hardware.
 
 ## Controls
 
