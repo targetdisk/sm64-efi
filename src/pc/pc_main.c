@@ -15,6 +15,7 @@
 #include "gfx/gfx_direct3d11.h"
 #include "gfx/gfx_direct3d12.h"
 #include "gfx/gfx_dos_api.h"
+#include "gfx/gfx_uefi_gop.h"
 #include "gfx/gfx_dxgi.h"
 #include "gfx/gfx_glx.h"
 #include "gfx/gfx_sdl.h"
@@ -175,6 +176,8 @@ void main_func(void) {
     rendering_api = &gfx_soft_api;
     #if defined(TARGET_DOS)
         wm_api = &gfx_dos_api;
+    #elif defined(TARGET_EFI)
+        wm_api = &gfx_uefi_gop;
     #else
         wm_api = &gfx_sdl;
     #endif
